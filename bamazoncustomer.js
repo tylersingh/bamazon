@@ -51,14 +51,14 @@ var display = function() {
 display();
 
 //a function to push the values from the table so the user can view whats available
-function pushTable() {
-    connection.query("SELECT * FROM products", function (err, response){
-        if (err) throw err;
-        for (i = 0; i < response.length; i++) { 
-            console.log(response[i].id + " " + response[i].product_name + " " + response[i].depart_id + " " + response[i].stock_quantity + " " + response[i].price);
-          };
-    })
-};
+// function pushTable() {
+//     connection.query("SELECT * FROM products", function (err, response){
+//         if (err) throw err;
+//         for (i = 0; i < response.length; i++) { 
+//             console.log(response[i].id + " " + response[i].product_name + " " + response[i].depart_id + " " + response[i].stock_quantity + " " + response[i].price);
+//           };
+//     })
+// };
 
 //calling the pushTable function
 //pushTable();
@@ -70,9 +70,9 @@ function questions() {
         //using inquirer to prompt the questions to the user
         inquirer.prompt([
             {
-              name: "product_name",
+              name: "product_id",
               type: "input",
-              message: "What would you like to buy?"
+              message: "What would you like to buy? Enter the ID once selected"
             }, {
               name: "stock_quantity",
               type: "input",
@@ -80,17 +80,21 @@ function questions() {
             },
           ]).then(function(answers) {
               //taking the user's response and decrementing the stock
-           var clientRes = parseInt(answers.product_name) - 1;
-           console.log(answers);
-           console.log(clientRes);
-           var stock_quantity = response[clientRes].stock_quantity;
-           console.log(stock_quantity);
+           var clientRes = parseInt(answers.product_id);
+          //  console.log(answers);
+          //  console.log(clientRes);
+           var stock_quantity = response[clientRes - 1].stock_quantity;
+          //  console.log(stock_quantity);
            var numberUserWants = parseInt(answers.stock_quantity);
-           console.log(numberUserWants)
+          //  console.log(numberUserWants)
             //if else statement to update the quantity and total price
            if (numberUserWants <= parseInt(stock_quantity)) {
                 console.log("\n");
                 console.log("Good news! We have your item in stock");
+                var currentStock = parseInt(stock_quantity) - numberUserWants;
+                // console.log(updateStock)
+                updateStock(clientRes, currentStock);
+                // console.log(currentStock);
                 // updateQuantity-= answer.stock_quantity
 
                 // var totalPrice = answer.stock_quantity * response[selection].price;
@@ -109,25 +113,44 @@ function questions() {
                 // )
                 //else statement advising the user the item requested is out of stock
             } else {
-                console.log("WE ARE OUT OF STOCK " + response[selection].product_name + " Insufficient quantity! ")
+                console.log("WE ARE OUT OF STOCK " + response[clientRes - 1].product_name + " Insufficient quantity! ")
+                display();
             }
-            console.log("error")
-            display();
-            connection.end();
+            // console.log("error")
+            // display();
+            // connection.end();
         });
     });
 }
-function updateStock(productName, quantity){
+function updateStock(productID, quantity){
+  // console.log("Here")
   connection.query(
     "UPDATE products SET ? WHERE ?",
     [{
       stock_quantity: quantity
     },{
-      id: productName
+      id: productID
     }], function (err, response){
 
-      console.log(response);
-      console.log(err);
+      // console.log(response);
+      // console.log(err);
+      console.log("Thank you for shopping with us!")
+      inquirer.prompt([
+        {
+          name: "continueShopping",
+          type: "confirm",
+          message: "Would you like to buy more?"
+        }]).then(function(answers) {
+          // console.log(answers);
+          var clientRes = answers.continueShopping;
+
+          if (clientRes) {
+            display();
+          } else {
+            process.exit();
+          }
+        })
+      // display();
     }
   )
 
